@@ -19,8 +19,14 @@ module.exports.index = async (req, res) => {
         //pagination
         const countData = await Task.find(findQuery).countDocuments();
         const pagination = paginationHelper(req.query,countData);
+        //sort
+        let sort={};
+        if(req.query.sortBy && req.query.sortType){
+            sort[req.query.sortBy] = req.query.sortType;
+        }
         const tasks = await Task
             .find(findQuery)
+            .sort(sort)
             .skip(pagination.skipPage)
             .limit(pagination.limitPage);
         res.json({
