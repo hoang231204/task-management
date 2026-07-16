@@ -1,10 +1,15 @@
 const Task = require('../model/task-model');
+const searchHelper = require('../../../helpers/search-helper');
 //GET /tasks
 module.exports.index = async (req, res) => {
     try{
         let findQuery={};
         if(req.query.status){
             findQuery.status=req.query.status;
+        }
+        const regex = searchHelper(req.query);
+        if(req.query.keyword){
+            findQuery.title = regex;
         }
         findQuery.deleted=false;
         const tasks = await Task
