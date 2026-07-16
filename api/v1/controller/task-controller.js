@@ -33,3 +33,18 @@ module.exports.detail = async (req, res) =>{
         res.status(500).json({ message: error.message });
     }
 }
+//PATCH /tasks/change-status/:id
+module.exports.changeStatus = async (req, res) =>{
+    try{
+        const id = req.params.id;
+        const newStatus = req.body.status;
+        await Task.updateOne({_id: id}, {status: newStatus});
+        res.json({
+            code: 200,
+            message: 'Status updated successfully'
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
