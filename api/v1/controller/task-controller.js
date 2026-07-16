@@ -66,3 +66,28 @@ module.exports.changeStatus = async (req, res) =>{
         res.status(500).json({ message: error.message });
     }
 }
+//PATCH /tasks/change-multi
+module.exports.changeMulti = async (req, res) =>{
+    try{
+        const ids = req.body.ids;
+        const key = req.body.key;
+        const value = req.body.value;
+        switch(key){
+            case 'status':
+                await Task.updateMany({_id: {$in: ids}}, {status: value});
+                break;
+            case 'deleted':
+                await Task.updateMany({_id: {$in: ids}}, {deleted: true});
+                break;
+            default:
+                return res.status(400).json({ message: 'Invalid key' });
+        }
+        res.json({
+            code: 200,
+            message: 'Multi update successful'
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
