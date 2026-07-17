@@ -91,3 +91,19 @@ module.exports.changeMulti = async (req, res) =>{
         res.status(500).json({ message: error.message });
     }
 }
+//POST /tasks/create
+module.exports.create = async (req, res) =>{
+    try{
+        const { title, content, status } = req.body;
+        const newTask = new Task({
+            title,
+            content,
+            status
+        });
+        await newTask.save();
+        res.status(201).json(newTask);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
