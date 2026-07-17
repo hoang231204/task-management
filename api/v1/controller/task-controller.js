@@ -107,3 +107,14 @@ module.exports.create = async (req, res) =>{
         res.status(500).json({ message: error.message });
     }
 }
+//PATCH /tasks/update/:id
+module.exports.update = async (req, res) =>{
+    try{
+        const id = req.params.id;
+        const updatedTask = await Task.updateOne({_id: id}, req.body)
+        res.json(updatedTask);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
