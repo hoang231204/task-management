@@ -118,3 +118,17 @@ module.exports.update = async (req, res) =>{
         res.status(500).json({ message: error.message });
     }
 }
+//DELETE /tasks/delete/:id
+module.exports.delete = async (req, res) =>{
+    try{
+        const id = req.params.id;
+        await Task.updateOne({_id: id}, {deleted: true});
+        res.json({
+            code: 200,
+            message: 'Task deleted successfully'
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
