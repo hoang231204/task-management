@@ -95,3 +95,20 @@ module.exports.refreshToken = async (req, res) => {
         return res.status(500).json({ message: 'Error occurred while refreshing tokens' });
     }
 }
+//POST /api/v1/auth/logout
+module.exports.logout = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) {
+            return res.status(400).json({ message: 'Refresh token not provided' });
+        }
+        //Xóa token khỏi DB
+        await Session.deleteOne({ token: refreshToken });
+        //Xóa cookie
+        res.clearCookie('token');
+        res.clearCookie('refreshToken');
+        return res.status(200).json({ message: 'Logged out successfully' });
+    } catch (err) {
+        return res.status(500).json({ message: 'Error occurred while logging out' });
+    }
+}
