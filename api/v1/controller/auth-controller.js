@@ -3,6 +3,8 @@ const Session = require('../model/session-model');
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
+const ForgotPassword = require('../model/forgot-password-model');
+const sendEmail = require('../../../helpers/nodemailer');
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET
 const ACCESS_TOKEN_TTL = '15m'
 const REFRESH_TOKEN_TTL = '14d'
@@ -110,5 +112,29 @@ module.exports.logout = async (req, res) => {
         return res.status(200).json({ message: 'Logged out successfully' });
     } catch (err) {
         return res.status(500).json({ message: 'Error occurred while logging out' });
+    }
+}
+//POST /api/v1/auth/password/forgot
+module.exports.forgotPassword = async (req, res) => {
+    try{
+        const email = req.body.email;
+        const user = await User.findOne({email: email});
+        if(!user){
+            return res.status(400).json({ message: 'Email does not exist or account is inactive' });
+        }
+        const forgotPassword = new ForgotPassword({
+            email: email,
+            expireAt: Date.now()
+        });
+        await forgotPassword.save();
+        res.status(200).json({ message: 'OTP has been sent to your email' });
+        //Gửi email chứa mã OTP
+        const subject = "Mã OTP đặt lại mật khẩu";
+        const html = `<p>Mã OTP của bạn là: <b>${forgotPassword.otp}</b></p><p>Mã OTP có hiệu lực trong 3 phút.</p>`;
+        sendEmail.send(email, subject, html);
+    }
+    catch(error){
+        console.error(error);
+        return res.status(500).json({ message: 'Error occurred while processing forgot password request' });
     }
 }
