@@ -147,9 +147,11 @@ module.exports.checkOtp = async (req, res) => {
         if(!forgotPassword){
             return res.status(400).json({ message: 'Invalid OTP or email' });
         }
+        //Xóa bản ghi OTP sau khi xác thực thành công
+        await ForgotPassword.deleteOne({ _id: forgotPassword._id });
         const resetToken = crypto.randomBytes(32).toString('hex');
         const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-        await User.findByIdAndUpdate(forgotPassword.userId, {
+        await User.updateOne({ email: email }, {
             resetPasswordToken: hashedToken,
             resetPasswordExpires: Date.now() + 5 * 60 * 1000
         });
@@ -159,5 +161,31 @@ module.exports.checkOtp = async (req, res) => {
     catch(error){
         console.error(error);
         return res.status(500).json({ message: 'Error occurred while checking OTP' });
+    }
+}
+//POST /api/v1/auth/password/reset
+module.exports.resetPassword = async (req, res) =>{
+    const resetToken = req.cookies.resetToken;
+    if(!resetToken){
+        return res.status(400).json({ message: 'Reset token not provided' });
+    }
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    try{
+        const user = await User.findOne({ resetPasswordToken: hashedToken, resetPasswordExpires: { $gt: Date.now() } });
+        if(!user){
+            return res.status(400).json({ message: 'Invalid or expired reset token' });
+        }
+        const newPassword = req.body.password;
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.hashedPassword = hashedPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+        res.clearCookie('resetToken');
+        return res.status(200).json({ message: 'Password reset successfully' });
+    }
+    catch(error){
+        console.error(error);
+        return res.status(500).json({ message: 'Error occurred while resetting password' });
     }
 }
