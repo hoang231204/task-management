@@ -64,3 +64,34 @@ module.exports.login = async (req, res) => {
         return res.status(500).json({ message: 'Error occurred while logging in' })
     }
 }
+//POST /api/v1/auth/refresh-token
+module.exports.refreshToken = async (req, res) => {
+    try {
+        const oldRefreshToken = req.cookies.refreshToken;
+        if (!oldRefreshToken) {
+            res.status(401).json({ message: 'Refresh token not provided' });
+            return;
+        }
+        //Tìm token trong DB
+        const tokenRecord = await Session.findOne({ token: oldRefreshToken });
+        if (!tokenRecord) {
+            return res.status(401).json({ message: 'Invalid refresh token' });
+        }
+        //Xoay vòng (Rotation): Xóa cái cũ, tạo cái mới
+        await Session.deleteOne({ token: oldRefreshToken });
+        const newAccessToken = jwt.sign({ userId: tokenRecord.userId }, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_TTL });
+        const newRefreshToken = crypto.randomBytes(64).toString('hex');
+        // Lưu mới vào DB
+        await Session.create({
+            userId: tokenRecord.userId,
+            token: newRefreshToken,
+            expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+        });
+        //Cập nhật Cookie
+        res.cookie('token', newAccessToken, { httpOnly: true, maxAge: 15 * 60 * 1000 });
+        res.cookie('refreshToken', newRefreshToken, { httpOnly: true, maxAge: 14 * 24 * 60 * 60 * 1000 });
+        return res.status(200).json({ message: 'Tokens refreshed successfully' });
+    } catch (err) {
+        return res.status(500).json({ message: 'Error occurred while refreshing tokens' });
+    }
+}
