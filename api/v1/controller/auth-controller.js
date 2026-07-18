@@ -138,3 +138,26 @@ module.exports.forgotPassword = async (req, res) => {
         return res.status(500).json({ message: 'Error occurred while processing forgot password request' });
     }
 }
+//POST /api/v1/auth/password/check-otp
+module.exports.checkOtp = async (req, res) => {
+    try{
+        const email = req.body.email;
+        const otp = req.body.otp;
+        const forgotPassword = await ForgotPassword.findOne({email: email, otp: otp});
+        if(!forgotPassword){
+            return res.status(400).json({ message: 'Invalid OTP or email' });
+        }
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        await User.findByIdAndUpdate(forgotPassword.userId, {
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: Date.now() + 5 * 60 * 1000
+        });
+        res.cookie('resetToken', resetToken, { httpOnly: true, maxAge: 5 * 60 * 1000 });
+        return res.status(200).json({ message: 'OTP verified successfully' });
+    }
+    catch(error){
+        console.error(error);
+        return res.status(500).json({ message: 'Error occurred while checking OTP' });
+    }
+}
