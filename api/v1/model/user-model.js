@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema({
     deleted:{
         type: Boolean,
         default: false
+    },
+    resetPasswordToken: String,
+    resetPasswordExpires: {
+        type: Date,
+        expires: 300 
     }
 }, {
     timestamps: true
