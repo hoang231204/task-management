@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const taskController = require('../controller/task-controller');
-// Define your task routes here
+const taskValidation = require('../validation/task-validation');
 router.get('/', taskController.index);
 router.get('/detail/:id', taskController.detail);
 router.patch('/change-status/:id', taskController.changeStatus);
 router.patch('/change-multi', taskController.changeMulti);
-router.post('/create', taskController.create);
-router.patch('/update/:id', taskController.update);
+router.post('/create', taskValidation.create, taskController.create);
+router.patch('/update/:id', taskValidation.update, taskController.update);
 router.delete('/delete/:id', taskController.delete);
 module.exports = router;
