@@ -6,9 +6,9 @@ module.exports.requireAuth = async (req, res, next) => {
     if(token){
         try {
             const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-            const user = await User.findById(decoded.userId).select("-hashedPassword").lean();
+            const user = await User.findById(decoded.userId).select("username fullName avatarUrl bio email phone").lean();
             if(user){
-                res.locals.user = user;
+                req.user = user;
                 next();
             }else{
                 res.clearCookie('token');
