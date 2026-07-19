@@ -4,7 +4,13 @@ const paginationHelper = require('../../../helpers/pagination-helper');
 //GET /tasks
 module.exports.index = async (req, res) => {
     try{
-        let findQuery={};
+        let findQuery={
+            $or: [
+                { createdBy: req.user._id },
+                { userIds: req.user._id }
+            ],
+            deleted: false
+        };
         //filer status
         if(req.query.status){
             findQuery.status=req.query.status;
@@ -14,8 +20,6 @@ module.exports.index = async (req, res) => {
         if(req.query.keyword){
             findQuery.title = regex;
         }
-        //filter deleted
-        findQuery.deleted=false;
         //pagination
         const countData = await Task.find(findQuery).countDocuments();
         const pagination = paginationHelper(req.query,countData);
@@ -95,12 +99,13 @@ module.exports.changeMulti = async (req, res) =>{
 module.exports.create = async (req, res) =>{
     try{
         const userId = req.user._id;
-        const { title, content, status } = req.body;
+        const { title, content, status, userIds } = req.body;
         const newTask = new Task({
             title,
             content,
             status,
-            createdBy: userId
+            createdBy: userId,
+            userIds: userIds || [userId]
         });
         await newTask.save();
         res.status(201).json(newTask);
