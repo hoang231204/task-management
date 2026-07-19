@@ -17,6 +17,10 @@ const taskSchema = new mongose.Schema({
         type: String,
         ref: 'User'
     }],
+    taskParentId: {
+        type: String,
+        ref: 'Task'
+    },
     deleted:{
         type: Boolean,
         default: false
