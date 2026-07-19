@@ -13,6 +13,10 @@ const taskSchema = new mongose.Schema({
         type: String,
         ref: 'User'
     },
+    userIds: [{
+        type: String,
+        ref: 'User'
+    }],
     deleted:{
         type: Boolean,
         default: false
